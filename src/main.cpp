@@ -7,14 +7,14 @@
 using namespace std;
 
 int main(int argc,char* argv[]){
-if(argc <4){
+if(argc <5){
 cerr<<"Usage : "<<argv[0]<<" <TYPE> "<<"<Path 1> "<<"<Path 2>\n";
 return 1;
 }
 string type=argv[1];
 string path1=argv[2];
 string path2=argv[3];
-
+string IP=argv[4];
 regex type_regex(R"(^-[sr]$)");
 regex path_regex(R"(^(\/|\.{1,2}\/|[a-zA-Z0-9_.-]+\/)[a-zA-Z0-9_.\/-]*$)");
 
@@ -28,7 +28,7 @@ cerr<<"invalid path\n";
 
 if(type=="-s"){
 
-send(path1,path2);
+send(path1,path2,IP);
 }
 
 /*if(type=="-r"){
