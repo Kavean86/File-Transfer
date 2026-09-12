@@ -28,7 +28,7 @@ cerr<<"invalid path\n";
 
 if(type=="-s"){
 
-send(path1,path2,IP);
+send_file(path1,path2,IP);
 }
 
 /*if(type=="-r"){
