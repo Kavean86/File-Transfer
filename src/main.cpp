@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <regex>
+#include "send.h"
 using namespace std;
 
 int main(int argc,char* argv[]){
@@ -24,4 +25,14 @@ return 1;
 if(!regex_match(path1,path_regex) || !regex_match(path2,path_regex)){
 cerr<<"invalid path\n";
 }
+
+if(type=="-s"){
+
+send(path1,path2);
+}
+
+/*if(type=="-r"){
+receive(path1,path2);
+}
+*/
 }
