@@ -9,7 +9,7 @@
 #include <signal.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
+#include <fstream>
 using namespace std;
 
 void send_file(string source_path, string dest_path, string dest_ip)
@@ -24,18 +24,14 @@ void send_file(string source_path, string dest_path, string dest_ip)
 
     if (pid == 0) {
 
-        string host = dest_ip;
+        string host = "root@"+dest_ip;
 
         execlp("ssh","ssh",host.c_str(),"nc -l 8756",(char*)nullptr);
         perror("execlp");
         _exit(1);
     }
 
-    int send_socket = socket(
-        AF_INET,
-        SOCK_STREAM,
-        IPPROTO_TCP
-    );
+    int send_socket = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
 
     if (send_socket < 0) {
         perror("socket");
@@ -63,21 +59,36 @@ void send_file(string source_path, string dest_path, string dest_ip)
 
         if (connect(send_socket,reinterpret_cast<sockaddr*>(&addr),sizeof(addr)) == 0)
         {
-            cout << "Connected to mycp-server\n";
             break;
         }
 
         usleep(200000);
     }
+//
+  //  
+    string newline="\n";
 
-    string test = "12765kaveh";
+if(send(send_socket,dest_path.c_str(),dest_path.size(),0)>0 && send(send_socket,newline.c_str(),newline.size(),0)>0){
 
-    ssize_t sent = ::send(send_socket,test.c_str(),test.size(),0);
+    char buffer[1024];
+    ifstream source_file(source_path,ios::binary);
 
-    if (sent < 0) {
-        perror("send");
+    if(!source_file.is_open()){
+    cout<<"can not open file\n";
     }
 
+    while (true) {
+
+    source_file.read(buffer, sizeof(buffer));
+
+    streamsize bytes_read = source_file.gcount();
+
+    send(send_socket,buffer,bytes_read,0);
+     if (source_file.eof()) {
+        break;
+    }
+    }
+}
     close(send_socket);
 
     waitpid(pid, nullptr, 0);
