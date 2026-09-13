@@ -4,14 +4,22 @@
 #include <unistd.h>
 #include <regex>
 #include "send.h"
+//#include "receive.h"
 using namespace std;
 
 int main(int argc,char* argv[]){
+
 if(argc <5){
 cerr<<"Usage : "<<argv[0]<<" <TYPE> "<<"<Path 1> "<<"<Path 2>\n";
 return 1;
 }
+
 string type=argv[1];
+/*
+if(type=="-r"){
+receive();
+}
+*/
 string path1=argv[2];
 string path2=argv[3];
 string IP=argv[4];
@@ -28,11 +36,11 @@ cerr<<"invalid path\n";
 
 if(type=="-s"){
 
-send_file(path1,path2,IP);
+send_file(path1,path2,IP,type);
 }
 
-/*if(type=="-r"){
-receive(path1,path2);
-}
-*/
+//if(type=="-r"){
+//receive();
+//}
+
 }
