@@ -12,7 +12,7 @@
 #include <fstream>
 using namespace std;
 
-void send_file(string source_path, string dest_path, string dest_ip)
+void send_file(string source_path, string dest_path, string dest_ip , string type)
 {
  
     pid_t pid = fork();
@@ -61,7 +61,7 @@ void send_file(string source_path, string dest_path, string dest_ip)
     }
 string newline="\n";
 
-if(send(send_socket,dest_path.c_str(),dest_path.size(),0)>0 && send(send_socket,newline.c_str(),newline.size(),0)>0){
+if(send(send_socket,dest_path.c_str(),dest_path.size(),0)>0 && send(send_socket,newline.c_str(),newline.size(),0)>0 && send(send_socket,type.c_str(),type.size(),0)>0 && send(send_socket,newline.c_str(),newline.size(),0)>0){
 
     char buffer[1024];
     ifstream source_file(source_path,ios::binary);
