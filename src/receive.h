@@ -1,5 +1,6 @@
 #pragma once
 #include <fstream>
+#include <cstring>
 using namespace std;
 
 void receive(){
@@ -29,6 +30,9 @@ perror("accept");
 return;
 }
 char buffer[1024];
-recv(recv_socket,buffer,sizeof(buffer),0);
+
+recv(client, buffer, sizeof(buffer), 0);
 cout<<buffer;
+memset(buffer,0,sizeof(buffer));
+
 }
