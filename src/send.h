@@ -16,13 +16,16 @@ void send_file(string source_path, string dest_path, string dest_ip , string typ
 {
  
     pid_t pid = fork();
+
     if (pid < 0) {
         perror("fork");
         return;
     }
 
     if (pid == 0) {
+
         string host = "root@"+dest_ip;
+
         execlp("ssh","ssh",host.c_str(),"nc -l 8756",(char*)nullptr);
         perror("execlp");
         _exit(1);
@@ -45,6 +48,7 @@ void send_file(string source_path, string dest_path, string dest_ip , string typ
     if (inet_pton(AF_INET,dest_ip.c_str(),&addr.sin_addr) <= 0)
     {
         cerr << "Invalid IP address\n";
+
         close(send_socket);
         kill(pid, SIGTERM);
         waitpid(pid, nullptr, 0);
@@ -57,9 +61,12 @@ void send_file(string source_path, string dest_path, string dest_ip , string typ
         {
             break;
         }
+
         usleep(200000);
     }
-string newline="\n";
+//
+  //  
+    string newline="\n";
 
 if(send(send_socket,dest_path.c_str(),dest_path.size(),0)>0 && send(send_socket,newline.c_str(),newline.size(),0)>0 && send(send_socket,type.c_str(),type.size(),0)>0 && send(send_socket,newline.c_str(),newline.size(),0)>0){
 
@@ -73,14 +80,16 @@ if(send(send_socket,dest_path.c_str(),dest_path.size(),0)>0 && send(send_socket,
     while (true) {
 
     source_file.read(buffer, sizeof(buffer));
-    streamsize bytes_read = source_file.gcount();
-    send(send_socket,buffer,bytes_read,0);
 
+    streamsize bytes_read = source_file.gcount();
+
+    send(send_socket,buffer,bytes_read,0);
      if (source_file.eof()) {
         break;
     }
     }
 }
     close(send_socket);
+
     waitpid(pid, nullptr, 0);
 }
