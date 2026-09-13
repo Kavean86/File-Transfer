@@ -26,7 +26,7 @@ void send_file(string source_path, string dest_path, string dest_ip , string typ
 
         string host = "root@"+dest_ip;
 
-        execlp("ssh","ssh",host.c_str(),"nc -l 8756",(char*)nullptr);
+        execlp("ssh","ssh",host.c_str(),"/root/a.out -r",(char*)nullptr);
         perror("execlp");
         _exit(1);
     }
