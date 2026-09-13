@@ -30,9 +30,32 @@ perror("accept");
 return;
 }
 char buffer[1024];
+string ACK="ACK";
 
-recv(client, buffer, sizeof(buffer), 0);
-cout<<buffer;
-memset(buffer,0,sizeof(buffer));
+string meta[3];
+
+for (int i = 0; i < 3; i++) {
+ssize_t meta_received = recv(client, buffer, sizeof(buffer), 0);
+if (meta_received <= 0)
+break;
+meta[i] = string(buffer, meta_received);
+send(client, ACK.c_str(), ACK.size(), 0);
+memset(buffer, 0, sizeof(buffer));
+}
+string type=meta[0];
+string path=meta[1];
+string len=meta[2];
+
+if(type=="-s"){
+ssize_t received = recv(client, buffer, sizeof(buffer), 0);
+
+string data(buffer, received);
+//send(client, ACK.c_str(), ACK.size(), 0);
+memset(buffer, 0, sizeof(buffer));
+
+cout<<type<<endl<<path<<endl<<len<<endl<<endl<<data;
+}
+
+
 
 }

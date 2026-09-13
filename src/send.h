@@ -67,8 +67,16 @@ void send_file(string source_path, string dest_path, string dest_ip , string typ
 //
   //  
     string newline="\n";
+    char ack[3];
 
-if(send(send_socket,dest_path.c_str(),dest_path.size(),0)>0 && send(send_socket,newline.c_str(),newline.size(),0)>0 && send(send_socket,type.c_str(),type.size(),0)>0 && send(send_socket,newline.c_str(),newline.size(),0)>0){
+    send(send_socket,type.c_str(),type.size(),0);
+    if(recv(send_socket,ack,sizeof(ack),0)>0){
+	    memset(ack,0,sizeof(ack));
+	    send(send_socket,dest_path.c_str(),dest_path.size(),0);
+	    if(recv(send_socket,ack,sizeof(ack),0)>0){
+	    memset(ack,0,sizeof(ack));
+	    }
+    }
 
     char buffer[1024];
     ifstream source_file(source_path,ios::binary);
@@ -82,13 +90,19 @@ if(send(send_socket,dest_path.c_str(),dest_path.size(),0)>0 && send(send_socket,
     source_file.read(buffer, sizeof(buffer));
 
     streamsize bytes_read = source_file.gcount();
+    string bytes=to_string(bytes_read);
 
-    send(send_socket,buffer,bytes_read,0);
+   send(send_socket,bytes.c_str(),bytes.size(),0);
+   if(recv(send_socket,ack,sizeof(ack),0)>0){
+       memset(ack,0,sizeof(ack));
+       send(send_socket,buffer,bytes_read,0);
+   }
+
      if (source_file.eof()) {
         break;
     }
     }
-}
+
     close(send_socket);
 
     waitpid(pid, nullptr, 0);
