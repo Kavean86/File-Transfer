@@ -101,8 +101,10 @@ void send_file(string source_path, string dest_path, string dest_ip , string typ
      if (source_file.eof()) {
         break;
     }
+     
     }
-
+    
+    source_file.close();
     close(send_socket);
 
     waitpid(pid, nullptr, 0);

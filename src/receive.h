@@ -47,15 +47,23 @@ string path=meta[1];
 string len=meta[2];
 
 if(type=="-s"){
-ssize_t received = recv(client, buffer, sizeof(buffer), 0);
-
-string data(buffer, received);
-//send(client, ACK.c_str(), ACK.size(), 0);
-memset(buffer, 0, sizeof(buffer));
-
-cout<<type<<endl<<path<<endl<<len<<endl<<endl<<data;
+ ofstream output(path,ios::binary);
+if (!output) {
+perror("open");
+return;
 }
-
-
-
+while (true) {
+ssize_t received = recv(client, buffer, sizeof(buffer), 0);
+if (received == 0) {
+break;
+}
+if (received < 0) {
+perror("recv");
+break;
+}
+output.write(buffer, received);
+}
+output.close();
+cout << "File received successfully\n";
+}
 }
