@@ -21,7 +21,7 @@ pid_t start_ssh(string dest_ip)
     {
         string host = "root@" + dest_ip;
 
-        execlp("ssh","ssh",host.c_str(),"/root/a.out","-r",(char*)nullptr);
+        execlp("ssh","ssh",host.c_str(),"/root/a.out","-l",(char*)nullptr);
 
         perror("execlp");
         _exit(1);

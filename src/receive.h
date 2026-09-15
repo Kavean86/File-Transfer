@@ -216,7 +216,6 @@ void receive()
         cout << "File received successfully\n";
     }
 
-
     close(client);
     close(recv_socket);
 }

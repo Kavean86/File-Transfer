@@ -5,6 +5,8 @@
 #include <regex>
 #include "send.h"
 #include "receive.h"
+#include "ssh.h"
+#include "recvfile.h"
 using namespace std;
 
 int main(int argc,char* argv[]){
@@ -16,7 +18,7 @@ return 1;
 
 string type=argv[1];
 
-if(type=="-r"){
+if(type=="-l"){
 receive();
 return 0;
 }
@@ -47,9 +49,9 @@ if(type=="-s"){
 
 send_file(path1,path2,IP,type);
 }
-
 if(type=="-r"){
-
+//start_ssh(IP);
+recv_file(IP);
 }
 
 }
