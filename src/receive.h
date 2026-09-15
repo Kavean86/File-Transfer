@@ -4,23 +4,16 @@
 #include <fstream>
 #include <cstring>
 #include <string>
-
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
-
 #include "socket_utils.h"
-
 using namespace std;
 
 
 void receive()
 {
-    int recv_socket = socket(
-        AF_INET,
-        SOCK_STREAM,
-        IPPROTO_TCP
-    );
+    int recv_socket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
 
     if (recv_socket < 0)
     {
@@ -36,11 +29,7 @@ void receive()
     addr.sin_addr.s_addr = INADDR_ANY;
 
 
-    if (bind(
-            recv_socket,
-            (sockaddr*)&addr,
-            sizeof(addr)
-        ) < 0)
+    if (bind(recv_socket, (sockaddr*)&addr, sizeof(addr)) < 0)
     {
         perror("bind");
 
@@ -50,10 +39,7 @@ void receive()
     }
 
 
-    if (listen(
-            recv_socket,
-            1
-        ) < 0)
+    if (listen(recv_socket, 1) < 0)
     {
         perror("listen");
 
@@ -69,11 +55,7 @@ void receive()
         sizeof(clientaddr);
 
 
-    int client = accept(
-        recv_socket,
-        (sockaddr*)&clientaddr,
-        &client_size
-    );
+    int client = accept(recv_socket, (sockaddr*)&clientaddr, &client_size);
 
     if (client < 0)
     {
@@ -90,15 +72,7 @@ void receive()
     string type;
     string path;
 
-
-    /*
-        Receive type
-    */
-
-    if (!recv_line(
-            client,
-            type
-        ))
+    if (!recv_line(client, type))
     {
         cerr << "Failed to receive type\n";
 
@@ -108,16 +82,7 @@ void receive()
         return;
     }
 
-
-    /*
-        Send ACK
-    */
-
-    if (!send_all(
-            client,
-            ACK.c_str(),
-            ACK.size()
-        ))
+    if (!send_all(client, ACK.c_str(), ACK.size()))
     {
         close(client);
         close(recv_socket);
@@ -125,15 +90,7 @@ void receive()
         return;
     }
 
-
-    /*
-        Receive destination path
-    */
-
-    if (!recv_line(
-            client,
-            path
-        ))
+    if (!recv_line(client, path))
     {
         cerr << "Failed to receive destination path\n";
 
@@ -143,16 +100,7 @@ void receive()
         return;
     }
 
-
-    /*
-        Send ACK
-    */
-
-    if (!send_all(
-            client,
-            ACK.c_str(),
-            ACK.size()
-        ))
+    if (!send_all(client, ACK.c_str(), ACK.size()))
     {
         close(client);
         close(recv_socket);
@@ -160,17 +108,9 @@ void receive()
         return;
     }
 
-
-    /*
-        Receive file
-    */
-
     if (type == "-s")
     {
-        ofstream output(
-            path,
-            ios::binary
-        );
+        ofstream output(path, ios::binary);
 
 
         if (!output)
@@ -191,17 +131,8 @@ void receive()
         {
             string len;
 
-
-            /*
-                Receive length
-            */
-
-            if (!recv_line(
-                    client,
-                    len
-                ))
+            if (!recv_line(client, len))
             {
-                cerr << "Failed to receive length\n";
 
                 break;
             }
@@ -224,24 +155,11 @@ void receive()
                 break;
             }
 
-
-            /*
-                ACK length
-            */
-
-            if (!send_all(
-                    client,
-                    ACK.c_str(),
-                    ACK.size()
-                ))
+            if (!send_all(client, ACK.c_str(), ACK.size()))
             {
                 break;
             }
 
-
-            /*
-                Zero means EOF
-            */
 
             if (bytes_to_receive == 0)
             {
@@ -251,15 +169,7 @@ void receive()
 
             int total_received = 0;
 
-
-            /*
-                Receive exact amount
-            */
-
-            while (
-                total_received <
-                bytes_to_receive
-            )
+            while (total_received < bytes_to_receive)
             {
                 int remaining =
                     bytes_to_receive -
@@ -277,12 +187,7 @@ void receive()
 
 
                 ssize_t received =
-                    recv(
-                        client,
-                        buffer,
-                        chunk_size,
-                        0
-                    );
+                    recv(client, buffer, chunk_size, 0);
 
 
                 if (received <= 0)
@@ -298,10 +203,7 @@ void receive()
                 }
 
 
-                output.write(
-                    buffer,
-                    received
-                );
+                output.write(buffer, received);
 
 
                 total_received += received;
@@ -318,3 +220,5 @@ void receive()
     close(client);
     close(recv_socket);
 }
+
+
