@@ -51,7 +51,7 @@ send_file(path1,path2,IP,type);
 }
 if(type=="-r"){
 //start_ssh(IP);
-recv_file(IP);
+recv_file(IP,type,path2,path1);
 }
 
 }

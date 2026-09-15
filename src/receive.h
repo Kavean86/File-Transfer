@@ -107,6 +107,7 @@ void receive()
 
         return;
     }
+//    cout<<type<<endl<<path;
 
     if (type == "-s")
     {
@@ -214,6 +215,19 @@ void receive()
         output.close();
 
         cout << "File received successfully\n";
+    }
+
+    if(type=="-r"){
+    ifstream source_file(path,ios::binary);
+    char buffer[1024];
+
+    while (source_file.read(buffer, sizeof(buffer)) || source_file.gcount() > 0)
+    {
+        streamsize bytes_read = source_file.gcount();
+
+	send_all(client, buffer, bytes_read);
+    }
+
     }
 
     close(client);
