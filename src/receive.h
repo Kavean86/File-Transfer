@@ -1,69 +1,320 @@
 #pragma once
+
+#include <iostream>
 #include <fstream>
 #include <cstring>
+#include <string>
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+
+#include "socket_utils.h"
+
 using namespace std;
 
-void receive(){
-int recv_socket=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
-if(recv_socket<0){
-perror("socket");
-return;
-}
-sockaddr_in addr{};
-addr.sin_family=AF_INET;
-addr.sin_port=htons(8756);
-addr.sin_addr.s_addr=INADDR_ANY;
-if(bind(recv_socket,(sockaddr*)&addr,sizeof(addr))<0){
-perror("bind");
-return;
-}
-if(listen(recv_socket,1)<0){
-perror("listen");
-return;
-}
 
-sockaddr_in clientaddr;
-socklen_t client_size=sizeof(clientaddr);
-int client=accept(recv_socket,(sockaddr*)&clientaddr,&client_size);
-if(client<0){
-perror("accept");
-return;
-}
-char buffer[1024];
-string ACK="ACK";
+void receive()
+{
+    int recv_socket = socket(
+        AF_INET,
+        SOCK_STREAM,
+        IPPROTO_TCP
+    );
 
-string meta[3];
+    if (recv_socket < 0)
+    {
+        perror("socket");
+        return;
+    }
 
-for (int i = 0; i < 3; i++) {
-ssize_t meta_received = recv(client, buffer, sizeof(buffer), 0);
-if (meta_received <= 0)
-break;
-meta[i] = string(buffer, meta_received);
-send(client, ACK.c_str(), ACK.size(), 0);
-memset(buffer, 0, sizeof(buffer));
-}
-string type=meta[0];
-string path=meta[1];
-string len=meta[2];
 
-if(type=="-s"){
- ofstream output(path,ios::binary);
-if (!output) {
-perror("open");
-return;
-}
-while (true) {
-ssize_t received = recv(client, buffer, sizeof(buffer), 0);
-if (received == 0) {
-break;
-}
-if (received < 0) {
-perror("recv");
-break;
-}
-output.write(buffer, received);
-}
-output.close();
-cout << "File received successfully\n";
-}
+    sockaddr_in addr{};
+
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(8756);
+    addr.sin_addr.s_addr = INADDR_ANY;
+
+
+    if (bind(
+            recv_socket,
+            (sockaddr*)&addr,
+            sizeof(addr)
+        ) < 0)
+    {
+        perror("bind");
+
+        close(recv_socket);
+
+        return;
+    }
+
+
+    if (listen(
+            recv_socket,
+            1
+        ) < 0)
+    {
+        perror("listen");
+
+        close(recv_socket);
+
+        return;
+    }
+
+
+    sockaddr_in clientaddr{};
+
+    socklen_t client_size =
+        sizeof(clientaddr);
+
+
+    int client = accept(
+        recv_socket,
+        (sockaddr*)&clientaddr,
+        &client_size
+    );
+
+    if (client < 0)
+    {
+        perror("accept");
+
+        close(recv_socket);
+
+        return;
+    }
+
+
+    string ACK = "ACK";
+
+    string type;
+    string path;
+
+
+    /*
+        Receive type
+    */
+
+    if (!recv_line(
+            client,
+            type
+        ))
+    {
+        cerr << "Failed to receive type\n";
+
+        close(client);
+        close(recv_socket);
+
+        return;
+    }
+
+
+    /*
+        Send ACK
+    */
+
+    if (!send_all(
+            client,
+            ACK.c_str(),
+            ACK.size()
+        ))
+    {
+        close(client);
+        close(recv_socket);
+
+        return;
+    }
+
+
+    /*
+        Receive destination path
+    */
+
+    if (!recv_line(
+            client,
+            path
+        ))
+    {
+        cerr << "Failed to receive destination path\n";
+
+        close(client);
+        close(recv_socket);
+
+        return;
+    }
+
+
+    /*
+        Send ACK
+    */
+
+    if (!send_all(
+            client,
+            ACK.c_str(),
+            ACK.size()
+        ))
+    {
+        close(client);
+        close(recv_socket);
+
+        return;
+    }
+
+
+    /*
+        Receive file
+    */
+
+    if (type == "-s")
+    {
+        ofstream output(
+            path,
+            ios::binary
+        );
+
+
+        if (!output)
+        {
+            perror("open");
+
+            close(client);
+            close(recv_socket);
+
+            return;
+        }
+
+
+        char buffer[1024];
+
+
+        while (true)
+        {
+            string len;
+
+
+            /*
+                Receive length
+            */
+
+            if (!recv_line(
+                    client,
+                    len
+                ))
+            {
+                cerr << "Failed to receive length\n";
+
+                break;
+            }
+
+
+            int bytes_to_receive;
+
+
+            try
+            {
+                bytes_to_receive =
+                    stoi(len);
+            }
+            catch (...)
+            {
+                cerr << "Invalid length: "
+                     << len
+                     << '\n';
+
+                break;
+            }
+
+
+            /*
+                ACK length
+            */
+
+            if (!send_all(
+                    client,
+                    ACK.c_str(),
+                    ACK.size()
+                ))
+            {
+                break;
+            }
+
+
+            /*
+                Zero means EOF
+            */
+
+            if (bytes_to_receive == 0)
+            {
+                break;
+            }
+
+
+            int total_received = 0;
+
+
+            /*
+                Receive exact amount
+            */
+
+            while (
+                total_received <
+                bytes_to_receive
+            )
+            {
+                int remaining =
+                    bytes_to_receive -
+                    total_received;
+
+
+                int chunk_size =
+                    remaining;
+
+
+                if (chunk_size > 1024)
+                {
+                    chunk_size = 1024;
+                }
+
+
+                ssize_t received =
+                    recv(
+                        client,
+                        buffer,
+                        chunk_size,
+                        0
+                    );
+
+
+                if (received <= 0)
+                {
+                    perror("recv");
+
+                    output.close();
+
+                    close(client);
+                    close(recv_socket);
+
+                    return;
+                }
+
+
+                output.write(
+                    buffer,
+                    received
+                );
+
+
+                total_received += received;
+            }
+        }
+
+
+        output.close();
+
+        cout << "File received successfully\n";
+    }
+
+
+    close(client);
+    close(recv_socket);
 }

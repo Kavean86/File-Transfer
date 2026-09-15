@@ -9,13 +9,6 @@ using namespace std;
 
 int main(int argc,char* argv[]){
 
-/*
-if(argc <5){
-cerr<<"Usage : "<<argv[0]<<" <TYPE> "<<"<Path 1> "<<"<Path 2>\n";
-return 1;
-}
-*/
-
 if(argc < 2){
 cerr<<"invalid arguments\n";
 return 1;
@@ -53,6 +46,10 @@ return 1;
 if(type=="-s"){
 
 send_file(path1,path2,IP,type);
+}
+
+if(type=="-r"){
+
 }
 
 }
